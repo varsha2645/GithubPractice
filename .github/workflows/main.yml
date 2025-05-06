@@ -1,0 +1,19 @@
+name: Clone Maven Project
+
+on:
+  push:
+    branches:
+      - main  # or your desired branch
+
+jobs:
+  clone:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout current repo
+        uses: actions/checkout@v3
+
+      - name: Clone private Maven project
+        env:
+          GITHUB_TOKEN: ${{ secrets.MY_PAT }}
+        run: |
+          git clone https:///varsha2645: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@github.com/varsha2645/GithubPractice.git
