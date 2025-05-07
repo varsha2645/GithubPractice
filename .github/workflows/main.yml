@@ -3,7 +3,7 @@ name: Clone Maven Project
 on:
   push:
     branches:
-      - main  # or your desired branch
+      - main 
 
 jobs:
   clone:
