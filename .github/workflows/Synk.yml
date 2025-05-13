@@ -18,6 +18,7 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Set up Java
+        id: setup-java
         uses: actions/setup-java@v3
         with:
           distribution: 'temurin'
@@ -32,10 +33,11 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-maven-
 
-      - name: Build with Maven (skip tests & WRO4J)
+      - name: Build with Maven (skip tests)
         run: mvn install -DskipTests
 
       - name: Run Snyk to check for vulnerabilities
         uses: snyk/actions/maven@master
         env:
           SNYK_TOKEN: ${{ secrets.SYNK_TOKEN }}
+          JAVA_HOME: ${{ steps.setup-java.outputs.path }}
