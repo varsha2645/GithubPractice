@@ -1,43 +1,44 @@
-name: Snyk Security Scans
+name: SCA Scan using Snyk
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
   pull_request:
-    branches:
-      - main
+    branches: [main]
+  workflow_dispatch:
 
 jobs:
-  snyk:
-    name: Snyk Scan
+  snyk-sca:
+    name: Snyk SCA Scan
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout source code
-        uses: actions/checkout@v3
+    - name: Checkout code
+      uses: actions/checkout@v3
 
-      - name: Set up Java
-        id: setup-java
-        uses: actions/setup-java@v3
-        with:
-          distribution: 'temurin'
-          java-version: '17'
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
 
-      - name: Cache Maven dependencies
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.m2/repository
-          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
-          restore-keys: |
-            ${{ runner.os }}-maven-
+    - name: Install dependencies
+      run: npm install
 
-      - name: Build with Maven (skip tests)
-        run: mvn install -DskipTests
+    - name: Run Snyk test
+      uses: snyk/actions/node@0.4.0
+      with:
+        command: test
+      env:
+        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 
-      - name: Run Snyk to check for vulnerabilities
-        uses: snyk/actions/maven@master
-        env:
-          SNYK_TOKEN: ${{ secrets.SYNK_TOKEN }}
-          JAVA_HOME: ${{ steps.setup-java.outputs.path }}
+    - name: Generate SARIF report
+      uses: snyk/actions/node@0.4.0
+      with:
+        command: test --sarif-file-output=snyk.sarif
+      env:
+        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+
+    - name: Upload SARIF to GitHub Security tab
+      uses: github/codeql-action/upload-sarif@v2
+      with:
+        sarif_file: snyk.sarif
