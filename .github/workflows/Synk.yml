@@ -1,4 +1,4 @@
-name: SCA Scan using Snyk
+name: Snyk SCA Scan (Node.js)
 
 on:
   push:
@@ -9,8 +9,8 @@ on:
 
 jobs:
   snyk-sca:
-    name: Snyk SCA Scan
     runs-on: ubuntu-latest
+    name: Snyk SCA Scan
 
     steps:
     - name: Checkout code
@@ -20,6 +20,24 @@ jobs:
       uses: actions/setup-node@v3
       with:
         node-version: '18'
+
+    - name: Ensure package.json exists
+      run: |
+        if [ ! -f "package.json" ]; then
+          echo "No package.json found, creating a basic one for testing"
+          echo '{
+            "name": "snyk-test-project",
+            "version": "1.0.0",
+            "description": "Snyk test project",
+            "main": "index.js",
+            "scripts": {},
+            "author": "",
+            "license": "ISC",
+            "dependencies": {
+              "lodash": "4.17.15"
+            }
+          }' > package.json
+        fi
 
     - name: Install dependencies
       run: npm install
@@ -31,14 +49,14 @@ jobs:
       env:
         SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 
-    - name: Generate SARIF report
+    - name: Run Snyk test with SARIF output
       uses: snyk/actions/node@0.4.0
       with:
         command: test --sarif-file-output=snyk.sarif
       env:
         SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 
-    - name: Upload SARIF to GitHub Security tab
+    - name: Upload SARIF report to GitHub
       uses: github/codeql-action/upload-sarif@v2
       with:
         sarif_file: snyk.sarif
